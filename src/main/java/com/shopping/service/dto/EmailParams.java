@@ -1,4 +1,4 @@
-package com.shopping.service.model;
+package com.shopping.service.dto;
 
 import lombok.Getter;
 import lombok.Setter;

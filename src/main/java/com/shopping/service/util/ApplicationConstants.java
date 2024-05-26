@@ -58,6 +58,10 @@ public class ApplicationConstants {
 		UserActivation;
 	}
 	
+	public enum ResponseType {
+		Error;
+	}
+	
 	
 
 }

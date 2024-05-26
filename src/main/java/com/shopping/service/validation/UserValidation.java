@@ -3,22 +3,33 @@ package com.shopping.service.validation;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.shopping.service.dto.request.UserDTO;
 import com.shopping.service.exception.BadRequestException;
 import com.shopping.service.model.User;
 
 public class UserValidation {
 
-	public boolean validate(User user) throws BadRequestException {
-		String firstName = user.getFirstName();
-		String lastName = user.getLastName();
-		String mobile = user.getMobile();
-		String email = user.getEmail();
-		String password = user.getPasswordHash();
+	public boolean validate(UserDTO userDTO) throws BadRequestException {
+		String firstName = userDTO.getFirstName();
+		String lastName = userDTO.getLastName();
+		String mobile = userDTO.getMobile();
+		String email = userDTO.getEmail();
+		String password = userDTO.getPasswordHash();
 
-		String regexPatternemail = "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@"
-				+ "[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$";
-		Pattern pemail = Pattern.compile(regexPatternemail);
-		Matcher memail = pemail.matcher(email);
+//		String regexPatternemail = "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@" //correct one used for first time
+//				+ "[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$"; //it is accepting dot in front. correct it later
+		
+//		String regexPatternemail = "^(?=.{1,64}@)[A-Za-z0-9_-]+(?:\\.[A-Za-z0-9_-]+)*@"
+//		        + "[^-][A-Za-z0-9-]+(?:\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$";
+		
+//		String regexPatternemail = "^(?=.{1,64}@)[A-Za-z0-9][A-Za-z0-9_-]*(?:\\.[A-Za-z0-9_-]+)*@"
+//		        + "[^-][A-Za-z0-9-]+(?:\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$";
+		
+		String regexPatternemail = "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9+_-]+)*@"
+		+ "[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$";
+		
+//		Pattern pemail = Pattern.compile(regexPatternemail);
+//		Matcher memail = pemail.matcher(email);
 
 		String firstNamePattern = "^[a-zA-Z][0-9a-zA-Z .,'-]*$";
 		Pattern pfname = Pattern.compile(firstNamePattern);
@@ -41,8 +52,8 @@ public class UserValidation {
 			throw new BadRequestException("last name cannot be empty");
 		} else if (mobile == null || mobile.length() < 10 || !mmobile.find()) {
 			throw new BadRequestException("Enter valid mobile number");
-		} else if (email == null || !memail.find()) {
-			throw new BadRequestException("Email cannot be null or Enter valid email");
+//		} else if (email == null || !memail.find()) {
+//			throw new BadRequestException("Email cannot be null or Enter valid email");
 		} else if (password == null || password.length() < 5 || !mpwd.find()) {
 			throw new BadRequestException("Please enter valid password");
 		}

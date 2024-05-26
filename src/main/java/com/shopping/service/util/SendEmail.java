@@ -13,7 +13,7 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import com.shopping.service.model.EmailParams;
+import com.shopping.service.dto.EmailParams;
 
 public class SendEmail {
 

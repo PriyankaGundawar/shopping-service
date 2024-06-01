@@ -16,8 +16,11 @@ import com.shopping.service.dto.request.UserDTO;
 import com.shopping.service.exception.BadRequestException;
 import com.shopping.service.exception.InvalidUserOrPasswordEntered;
 import com.shopping.service.exception.InvalidUserTokenException;
+import com.shopping.service.exception.UserNotFoundException;
 import com.shopping.service.model.User;
+import com.shopping.service.model.UserToken;
 import com.shopping.service.respository.UserRepository;
+import com.shopping.service.respository.UserTokenRepository;
 import com.shopping.service.util.ApplicationConstants.UserStatus;
 import com.shopping.service.util.GenerateRandomString;
 import com.shopping.service.util.HashingUtil;
@@ -31,6 +34,9 @@ public class UserService {
 
 	@Autowired
 	UserRepository userRepository;
+	
+	@Autowired
+	UserTokenRepository userTokenRepository;
 
 	HashingUtil hashUtil = new HashingUtil();
 
@@ -200,6 +206,79 @@ public class UserService {
 		} else {
 			throw new InvalidUserOrPasswordEntered("Invalid User or Password entered !!");
 		}
+	}
+	
+	public void userPasswordChange(String email, String oldPassword, String newPassword) throws BadRequestException, InvalidUserOrPasswordEntered {
+		String oldHashedPwd = hashUtil.stringHashing(oldPassword);
+		System.out.println(oldHashedPwd);
+		String newHashedPwd = hashUtil.stringHashing(newPassword);
+		System.out.println(newHashedPwd);
+		
+		if(oldHashedPwd.equals(newHashedPwd)) { //even we entered wrong pwd sending wrong msg. check
+			logger.info("entered old and new pwd's are same");
+			throw new BadRequestException("Password already been used. Please enter new");
+			//send bad request excpetion.check existing one
+		}
+		else {
+			User user = userRepository.findByEmail(email);
+			String oldPasswordFromDB = user.getPasswordHash();
+			if(oldPasswordFromDB.equals(oldHashedPwd)) {
+				logger.info("entered old pwd matched with db");
+				user.setPasswordHash(newHashedPwd);
+				user.setLastPasswordUpdatedAt(new Date(System.currentTimeMillis()));
+//				updateUser(user);
+				userRepository.save(user);
+				System.out.println("Pwd changed !!");
+				
+				EmailParams emailParams = new EmailParams();
+				String name = user.getFirstName();
+				emailParams.setEmailTo(email);
+				emailParams.setSubject(name);
+				emailParams.setEmailBody("Hi, " +name + " Your new password has been changed.");
+				
+				SendEmail sendEmail = new SendEmail();
+				sendEmail.sendEmail(emailParams);
+				
+			}
+			else {
+			logger.info("entered old pwd incorrect");
+			throw new InvalidUserOrPasswordEntered("Invalid User or Password entered !!");
+				
+			}
+			
+			
+		}
+	}
+	
+	public void forgotPassword(String email) throws UserNotFoundException {
+		User user = userRepository.findByEmail(email);
+		if(user == null) {
+			throw new UserNotFoundException("Please enter valid email");
+		}
+		else {
+			UserTokenService service = new UserTokenService();
+			UserToken userToken = service.forgotPasswordToken(user);
+			String token = userToken.getToken();
+			
+			EmailParams emailParams = new EmailParams();
+			emailParams.setEmailTo(user.getEmail());
+			emailParams.setSubject("Password Reset");
+			emailParams.setEmailBody("Please click below link to reset the password" + token);
+			
+			SendEmail sendEmail = new SendEmail();
+			sendEmail.sendEmail(emailParams);
+			logger.info("email has been sent for forgot password with token");
+		}
+	}
+	
+	public boolean tokenResponseForgotPassword(String token) {
+		UserToken userToken = userTokenRepository.findByToken();
+		if(userToken == null) {
+			logger.info("Invalid token response");
+			return false;
+		}
+		logger.info("Valid token");
+		return true;
 	}
 
 }
